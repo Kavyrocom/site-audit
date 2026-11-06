@@ -76,8 +76,12 @@ npm install -g lighthouse
 ### Dans Hermes Agent
 
 ```
-hermes skills install Kavyrocom/site-audit/skills/site-audit --category marketing --yes
+hermes skills install Kavyrocom/site-audit/skills/site-audit --category marketing --yes --force
 ```
+
+**Pourquoi `--force`.** Hermes analyse tout skill qui ne vient pas de son propre catalogue. Sans `--force`, l'installation s'arrête sur un verdict `CAUTION` avec 18 constats, dont 4 classés HIGH. C'est normal pour un outil qui lance Chrome et Lighthouse, peut appeler `ssh` si tu lui donnes un accès au back end, et transmet son environnement aux outils qu'il démarre. Les 4 constats HIGH sont des copies de l'environnement données à Lighthouse, Unlighthouse ou `git` (`lh_median.py`, `lh_site.py`, `safenet.py`) et un contrôle sur le nom d'une variable (`fix_tracker.py`) ; aucun n'envoie quoi que ce soit sur le réseau. Ne le crois pas sur parole : lance d'abord la commande **sans** `--force` pour lire la liste complète, puis ouvre les scripts dans `skills/site-audit/scripts/`.
+
+Si GitHub répond « rate limit », connecte-toi avec `gh auth login` ou renseigne `GITHUB_TOKEN` : sans identification, la limite est de 60 requêtes par heure.
 
 Vérifie qu'il est installé et actif :
 
