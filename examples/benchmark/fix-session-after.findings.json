@@ -1,0 +1,446 @@
+{
+  "meta": {
+    "url": "http://127.0.0.1:18931/",
+    "scope": "site",
+    "pages_audited": 5,
+    "date": "2026-11-05",
+    "device": "mobile",
+    "language": "fr",
+    "objective": "Obtenir des demandes de devis pour des séances photo",
+    "objective_source": "given",
+    "verdict": "Site très rapide, propre et centré sur un seul bouton de devis, mais il ne montre aucune photo ni preuve : pour un photographe, c'est ce qui coûte le plus de demandes de devis.",
+    "domains_audited": ["technical", "seo", "performance", "accessibility", "ux", "cro", "copy", "security", "privacy_tracking", "ai_visibility"],
+    "sources": [
+      "facts.json",
+      "lh/summary.json",
+      "lh/run1.json",
+      "shots/rendered.json",
+      "shots/rendered-mobile.txt",
+      "shots/mobile-01.png",
+      "shots/mobile-02.png",
+      "crawl/pages.jsonl",
+      "crawl/summary.json"
+    ],
+    "agent_access": ""
+  },
+  "strengths": [
+    {
+      "domain": "performance",
+      "text": "Performance mobile parfaite en laboratoire, stable sur 3 exécutions : LCP 625 ms, TBT 0 ms, CLS 0, page de 2,7 Ko.",
+      "evidence": "lh/summary.json : scores.performance 100 (min 100, max 100), metrics.lcp_ms médiane 625, tbt_ms 0, cls 0, total_bytes 2669"
+    },
+    {
+      "domain": "technical",
+      "text": "Les 5 pages répondent 200, une URL inconnue renvoie bien 404 (pas de soft 404), robots.txt autorise l'exploration et un sitemap existe.",
+      "evidence": "crawl/summary.json : status_counts 200=5 ; facts.json : site_level.soft_404_test.status=404, robots_disallow_all=false, /sitemap.xml status 200"
+    },
+    {
+      "domain": "seo",
+      "text": "Titres (24 à 53 caractères) et meta descriptions présents et distincts par page de service, un seul H1 par page, langue fr déclarée, mots-clés locaux (Lyon, devis) dans le titre et le H1.",
+      "evidence": "crawl/pages.jsonl : h1_count=1 sur 5 pages, title_len 24-53, meta_description_len 53-134, lang=fr ; facts.json : title « Studio Zorbul | Photographe à Lyon : portrait, mariage »"
+    },
+    {
+      "domain": "accessibility",
+      "text": "Contrastes et tailles de cibles tactiles conformes : aucun audit Lighthouse en échec sur ces points, 0 petite cible tactile, pas de défilement horizontal.",
+      "evidence": "lh/run1.json : color-contrast score 1, target-size score 1 ; shots/rendered.json : small_tap_targets=0, horizontal_scroll=false"
+    },
+    {
+      "domain": "ux",
+      "text": "Mise en page mobile lisible : viewport correct, texte de taille confortable, menu simple en 4 liens, aucune bannière ni élément fixe qui masque le contenu.",
+      "evidence": "shots/mobile-01.png : titre, bouton et texte lisibles ; shots/rendered.json : fixed_or_sticky=[], viewport meta présent (facts.json)"
+    },
+    {
+      "domain": "cro",
+      "text": "Un seul appel à l'action clair dès le premier écran (« Demander un devis gratuit », 226 x 50 px), avec une réassurance juste dessous (« Réponse sous 48 heures, sans engagement »). Le formulaire de devis est court, avec seulement 2 champs obligatoires (nom, email).",
+      "evidence": "shots/mobile-01.png : bouton visible à 270 px du haut ; shots/rendered-mobile.txt ligne 6 ; contact.html : required sur nom et email uniquement"
+    },
+    {
+      "domain": "copy",
+      "text": "Texte concret et sans jargon : zone desservie (Lyon, Villeurbanne, Caluire), délai de livraison (dix jours), délai de réponse (48 heures) et prix de départ sur la page Prestations (150 euros, 1 200 euros).",
+      "evidence": "shots/rendered-mobile.txt lignes 8 et 10 ; services.html : « à partir de 150 euros », « à partir de 1 200 euros »"
+    },
+    {
+      "domain": "security",
+      "text": "Aucune ressource tierce, aucun script, aucun contenu mixte : la surface d'attaque côté navigateur est minimale.",
+      "evidence": "facts.json : assets.external_scripts=0, third_party_script_hosts={}, mixed_content_http_resources=0, iframes=0"
+    },
+    {
+      "domain": "privacy_tracking",
+      "text": "Aucun traceur ni cookie tiers détecté, donc pas de bannière de consentement nécessaire pour l'instant.",
+      "evidence": "facts.json : trackers_detected=[], consent_tool_detected=[]"
+    },
+    {
+      "domain": "ai_visibility",
+      "text": "Le contenu est en HTML statique, lisible sans JavaScript, et robots.txt n'interdit aucun robot.",
+      "evidence": "facts.json : word_count_visible_raw_html=95 contre words_rendered=85 (shots/rendered.json), robots.txt « User-agent: * Allow: / »"
+    }
+  ],
+  "findings": [
+    {
+      "id": "F1",
+      "domain": "cro",
+      "title": "Aucune photo visible et aucune preuve sociale sur un site de photographe",
+      "severity": "high",
+      "effort": "medium",
+      "impact": "high",
+      "confidence": "deduced",
+      "observation": "Le visiteur ne voit aucune réalisation : l'unique image de l'accueil est un fichier de 134 octets qui ne s'affiche pas, et il n'y a ni portfolio, ni témoignage, ni avis, ni nombre de clients. Pour une demande de devis de séance photo, le style du photographe est le premier critère de décision.",
+      "evidence": "shots/mobile-01.png et mobile-02.png : écran sans image visible sous le texte ; curl hero.jpg : 200, 134 octets ; shots/rendered-mobile.txt : aucun mot témoignage, avis ou client ; crawl/pages.jsonl : 1 image sur 5 pages, 0 galerie",
+      "action": "Montrer 6 à 9 vraies photos et une preuve de confiance (avis ou nombre de séances) avant et près du bouton de devis.",
+      "pages": ["/", "/services.html", "/about.html"],
+      "owner": "content",
+      "fix_steps": [
+        "Choisir 6 à 9 photos réelles, au moins deux par type de séance (portrait, mariage, entreprise), avec l'accord des personnes photographiées.",
+        "Remplacer hero.jpg par une vraie photo d'accueil et ajouter sous le bouton une grille de 6 miniatures (largeur 800 px maximum, format WebP ou AVIF, attributs width et height).",
+        "Ajouter sous la grille 2 ou 3 avis clients réels avec prénom, type de séance et ville, par exemple : « Des photos naturelles, livrées en 8 jours. Camille, mariage à Caluire ».",
+        "Répéter une ligne de preuve (note moyenne ou nombre de séances réalisées) au-dessus du formulaire sur contact.html.",
+        "Vérifier sur téléphone que le bouton « Demander un devis gratuit » reste visible sans défiler."
+      ],
+      "verify": "Ouvrir l'accueil sur un téléphone (390 px) : au moins une vraie photo et une ligne de preuve sont visibles en deux écrans, et render.py indique au moins 6 images.",
+      "execution": {
+        "mode": "assisted",
+        "risk": "medium",
+        "rollback": "Conserver une copie des fichiers HTML actuels avant modification ; pour annuler, remettre ces copies en ligne.",
+        "needs": [
+          {
+            "id": "real_photos",
+            "kind": "content",
+            "what": "6 à 9 photos de réalisations réelles, avec le droit de les publier"
+          },
+          {
+            "id": "real_reviews",
+            "kind": "content",
+            "what": "2 ou 3 avis clients réels (texte, prénom, type de séance) avec autorisation de publication"
+          }
+        ]
+      }
+    },
+    {
+      "id": "F2",
+      "domain": "seo",
+      "title": "La canonique de l'accueil pointe vers un autre domaine et le sitemap aussi",
+      "severity": "high",
+      "effort": "low",
+      "impact": "high",
+      "confidence": "measured",
+      "observation": "L'accueil (et /index.html) déclare comme canonique https://studio-zorbul.example/, alors que les 3 autres pages sont canoniques sur leur propre adresse. Le sitemap et la ligne Sitemap de robots.txt listent aussi uniquement studio-zorbul.example. Si ce domaine n'est pas l'adresse définitive du site, les moteurs ignoreront cette page et le sitemap. Sur ce site de test, le domaine peut être un simple espace réservé : à confirmer.",
+      "evidence": "facts.json : canonical=https://studio-zorbul.example/, canonical_is_self=false ; crawl/pages.jsonl : canonical_is_self=false sur / et /index.html ; sitemap.xml : 4 <loc> sur studio-zorbul.example ; robots.txt : Sitemap: https://studio-zorbul.example/sitemap.xml",
+      "action": "Faire pointer canonique, sitemap et robots.txt vers l'adresse réelle et unique du site.",
+      "pages": ["/", "/index.html"],
+      "owner": "developer",
+      "fix_steps": [
+        "Confirmer avec le propriétaire l'adresse définitive du site (avec ou sans www, en https).",
+        "Dans index.html, remplacer la balise <link rel=\"canonical\"> par l'adresse réelle de l'accueil, par exemple https://<domaine-reel>/.",
+        "Régénérer sitemap.xml avec les 4 adresses réelles et mettre la même adresse dans la ligne Sitemap de robots.txt.",
+        "Faire une redirection 301 de /index.html vers / pour ne garder qu'une seule adresse d'accueil."
+      ],
+      "verify": "Relancer facts.py : canonical_is_self=true sur l'accueil ; ouvrir sitemap.xml : toutes les <loc> sont sur le domaine réel et répondent 200.",
+      "execution": {
+        "mode": "assisted",
+        "risk": "high",
+        "rollback": "Sauvegarder index.html, sitemap.xml, robots.txt et les règles de redirection avant modification ; pour annuler, remettre ces fichiers.",
+        "needs": [
+          {
+            "id": "final_domain",
+            "kind": "decision",
+            "what": "L'adresse définitive du site (domaine, www ou non, https)"
+          },
+          {
+            "id": "site_files_access",
+            "kind": "access",
+            "what": "Accès aux fichiers du site ou au serveur pour modifier le HTML, sitemap.xml, robots.txt et les redirections"
+          }
+        ]
+      }
+    },
+    {
+      "id": "F3",
+      "domain": "accessibility",
+      "title": "L'image de l'accueil n'a pas de texte alternatif et sa résolution est faible",
+      "severity": "medium",
+      "effort": "low",
+      "impact": "medium",
+      "confidence": "measured",
+      "observation": "La balise img de l'accueil n'a pas d'attribut alt : un lecteur d'écran lit le nom du fichier, et Google Images n'a aucun contexte. Lighthouse signale aussi que l'image est servie en basse résolution pour sa taille d'affichage.",
+      "evidence": "lh/run1.json : image-alt score 0 (<img src=\"hero.jpg\" width=\"640\" height=\"360\">), image-size-responsive score 0 ; facts.json : images.missing_alt_attr=1",
+      "action": "Ajouter un alt descriptif et fournir une image de résolution suffisante.",
+      "pages": ["/"],
+      "owner": "developer",
+      "fix_steps": [
+        "Dans index.html, sur la balise <img src=\"hero.jpg\">, ajouter un alt de moins de 125 caractères, par exemple alt=\"Portrait en lumière naturelle réalisé en studio à Lyon\".",
+        "Fournir une image au moins 2 fois plus large que son affichage (1280 px de large pour 640 px affichés), en WebP ou AVIF.",
+        "Garder les attributs width et height pour éviter tout décalage de mise en page."
+      ],
+      "verify": "Relancer lh_median.py : audits image-alt et image-size-responsive à 1, et facts.py : images.missing_alt_attr=0.",
+      "execution": {
+        "mode": "assisted",
+        "risk": "low",
+        "rollback": "",
+        "needs": [
+          {
+            "id": "real_photos",
+            "kind": "content",
+            "what": "6 à 9 photos de réalisations réelles, avec le droit de les publier"
+          },
+          {
+            "id": "site_files_access",
+            "kind": "access",
+            "what": "Accès aux fichiers du site ou au serveur pour modifier le HTML, sitemap.xml, robots.txt et les redirections"
+          }
+        ]
+      }
+    },
+    {
+      "id": "F4",
+      "domain": "cro",
+      "title": "Aucun moyen de contact direct : ni téléphone, ni email, ni lien mailto",
+      "severity": "medium",
+      "effort": "low",
+      "impact": "medium",
+      "confidence": "deduced",
+      "observation": "Le formulaire est la seule voie de contact. Un visiteur sur mobile qui préfère appeler ou écrire n'a aucune option, et aucune adresse ni coordonnée de l'entreprise n'est affichée, ce qui pèse sur la confiance.",
+      "evidence": "facts.json : tel_mailto_links=0 ; shots/rendered-mobile.txt : aucun numéro, aucun email, aucune adresse ; contact.html : un seul formulaire",
+      "action": "Afficher un numéro cliquable et un email à côté du bouton de devis et sur la page contact.",
+      "pages": ["/", "/contact.html"],
+      "owner": "marketing",
+      "fix_steps": [
+        "Choisir le numéro et l'email professionnels à publier.",
+        "Sur contact.html, ajouter sous le titre une ligne : « Une question ? Appelez le 01 99 00 00 04 ou écrivez à contact@<domaine> » (valeurs réelles), avec des liens tel: et mailto:.",
+        "Ajouter les mêmes liens en pied de page de l'accueil, avec des cibles tactiles d'au moins 44 px de haut."
+      ],
+      "verify": "Sur un téléphone, toucher le numéro lance l'appel ; facts.py : tel_mailto_links supérieur ou égal à 2 sur l'accueil.",
+      "execution": {
+        "mode": "assisted",
+        "risk": "low",
+        "rollback": "",
+        "needs": [
+          {
+            "id": "contact_details",
+            "kind": "info",
+            "what": "Numéro de téléphone, email et adresse professionnels à publier"
+          },
+          {
+            "id": "site_files_access",
+            "kind": "access",
+            "what": "Accès aux fichiers du site ou au serveur pour modifier le HTML, sitemap.xml, robots.txt et les redirections"
+          }
+        ]
+      }
+    },
+    {
+      "id": "F5",
+      "domain": "seo",
+      "title": "Contenu très court et pas de données structurées locales",
+      "severity": "medium",
+      "effort": "medium",
+      "impact": "medium",
+      "confidence": "measured",
+      "observation": "Les 5 pages ont moins de 150 mots (de 28 à 95), sans balisage schema.org. Un photographe local gagne à décrire ses séances, sa zone et à déclarer son activité (LocalBusiness) pour apparaître dans les recherches locales et dans les réponses d'IA.",
+      "evidence": "crawl/summary.json : thin_content_under_150_words=5 ; crawl/pages.jsonl : words 95, 67, 36, 28 ; facts.json : structured_data.jsonld_blocks=0, llms.txt status 404",
+      "action": "Étoffer les pages Prestations et À propos et ajouter un balisage LocalBusiness.",
+      "pages": ["/services.html", "/about.html", "/contact.html"],
+      "owner": "content",
+      "fix_steps": [
+        "Sur services.html, écrire 100 à 150 mots par prestation : déroulé de la séance, durée, ce qui est livré, pour qui, avec le prix de départ.",
+        "Sur about.html, présenter la ou le photographe (parcours, style, matériel, zone) en 150 mots minimum, avec une vraie photo.",
+        "Ajouter dans le <head> de l'accueil un bloc JSON-LD de type LocalBusiness (ou Photographer) avec name, url, telephone, address, areaServed (Lyon, Villeurbanne, Caluire) et openingHours.",
+        "Ajouter 4 à 6 questions fréquentes (délais, tarifs, déplacement) en titres H2 sur services.html."
+      ],
+      "verify": "Relancer crawl.py : plus aucune page signalée en thin_content_under_150_words sur services et about ; tester le JSON-LD avec l'outil de test des résultats enrichis de Google : 0 erreur.",
+      "execution": {
+        "mode": "assisted",
+        "risk": "low",
+        "rollback": "",
+        "needs": [
+          {
+            "id": "business_details",
+            "kind": "info",
+            "what": "Parcours, style, zone, horaires et adresse réels pour rédiger les textes et le balisage"
+          },
+          {
+            "id": "contact_details",
+            "kind": "info",
+            "what": "Numéro de téléphone, email et adresse professionnels à publier"
+          }
+        ]
+      }
+    },
+    {
+      "id": "F6",
+      "domain": "technical",
+      "title": "Doublon / et /index.html, favicon absent et erreur 404 en console",
+      "severity": "low",
+      "effort": "low",
+      "impact": "low",
+      "confidence": "measured",
+      "observation": "L'accueil existe sous deux adresses au contenu identique (titre et description dupliqués). Le favicon répond 404, ce qui génère une erreur dans la console du navigateur et fait perdre 8 points à la catégorie bonnes pratiques.",
+      "evidence": "crawl/summary.json : duplicate_titles=1, duplicate_meta_descriptions=1 ; lh/run1.json : errors-in-console score 0 (404 sur /favicon.ico) ; curl /favicon.ico : 404 ; lh/summary.json : best-practices 92",
+      "action": "Rediriger /index.html vers / et ajouter un favicon.",
+      "pages": ["/", "/index.html"],
+      "owner": "developer",
+      "fix_steps": [
+        "Mettre en place une redirection 301 de /index.html vers /, et faire pointer les liens du menu vers /.",
+        "Créer un favicon (32 x 32 px minimum) et le déclarer par <link rel=\"icon\" href=\"/favicon.ico\"> dans le <head> de chaque page."
+      ],
+      "verify": "curl -I sur /index.html : 301 vers / ; curl -I sur /favicon.ico : 200 ; lh_median.py : best-practices supérieur ou égal à 96.",
+      "execution": {
+        "mode": "assisted",
+        "risk": "medium",
+        "rollback": "Sauvegarder la configuration du serveur avant d'ajouter la redirection ; pour annuler, retirer la règle.",
+        "needs": [
+          {
+            "id": "site_files_access",
+            "kind": "access",
+            "what": "Accès aux fichiers du site ou au serveur pour modifier le HTML, sitemap.xml, robots.txt et les redirections"
+          },
+          {
+            "id": "logo_file",
+            "kind": "content",
+            "what": "Le logo du studio, pour fabriquer le favicon"
+          }
+        ]
+      }
+    },
+    {
+      "id": "F7",
+      "domain": "accessibility",
+      "title": "Pas de zone principale (main) sur les pages",
+      "severity": "low",
+      "effort": "low",
+      "impact": "low",
+      "confidence": "measured",
+      "observation": "Aucune balise <main> : les utilisateurs de lecteurs d'écran ne peuvent pas sauter le menu pour aller au contenu. Le score accessibilité Lighthouse est de 83, avec ce point et l'alt manquant.",
+      "evidence": "lh/run1.json : landmark-one-main score 0 ; lh/summary.json : accessibility 83 (min 83, max 83)",
+      "action": "Envelopper le contenu de chaque page dans une balise main.",
+      "pages": ["/", "/services.html", "/about.html", "/contact.html"],
+      "owner": "developer",
+      "fix_steps": [
+        "Dans chaque page, entourer tout ce qui suit la balise <nav> par <main> ... </main>.",
+        "Entourer le <nav> par un attribut aria-label=\"Navigation principale\"."
+      ],
+      "verify": "Relancer lh_median.py : audit landmark-one-main à 1 et accessibilité supérieure ou égale à 95 (avec F3 corrigé).",
+      "execution": {
+        "mode": "assisted",
+        "risk": "low",
+        "rollback": "",
+        "needs": [
+          {
+            "id": "site_files_access",
+            "kind": "access",
+            "what": "Accès aux fichiers du site ou au serveur pour modifier le HTML, sitemap.xml, robots.txt et les redirections"
+          }
+        ]
+      }
+    },
+    {
+      "id": "F8",
+      "domain": "ux",
+      "title": "Menu mobile sur deux lignes, sans mise en avant du lien Devis",
+      "severity": "low",
+      "effort": "low",
+      "impact": "low",
+      "confidence": "deduced",
+      "observation": "Sur 390 px, le menu passe à la ligne : « Devis » est seul sur la deuxième ligne et ressemble aux autres liens, alors que c'est l'action visée. Le bas de la page est vide, sans pied de page ni second bouton après le texte.",
+      "evidence": "shots/mobile-01.png : « Devis » à 82 px du haut sur la 2e ligne, texte souligné comme les autres liens ; shots/rendered.json : buttons_and_links Devis top=82 contre 32 pour les autres ; aucun élément sous le dernier paragraphe",
+      "action": "Faire tenir le menu sur une ligne et ajouter un bouton de devis en bas de page.",
+      "pages": ["/"],
+      "owner": "developer",
+      "fix_steps": [
+        "Réduire le padding horizontal des liens du menu à .5rem sur mobile (règle nav a dans la balise <style>) pour que les 4 liens tiennent sur une ligne à 390 px.",
+        "Donner au lien « Devis » le style du bouton (classe btn).",
+        "Ajouter après le dernier paragraphe de l'accueil un second bouton « Demander un devis gratuit » et un pied de page avec les coordonnées."
+      ],
+      "verify": "render.py : menu sur une seule ligne (tous les liens à top=32) et deux boutons de devis présents sur l'accueil.",
+      "execution": {
+        "mode": "assisted",
+        "risk": "low",
+        "rollback": "",
+        "needs": [
+          {
+            "id": "site_files_access",
+            "kind": "access",
+            "what": "Accès aux fichiers du site ou au serveur pour modifier le HTML, sitemap.xml, robots.txt et les redirections"
+          }
+        ]
+      }
+    },
+    {
+      "id": "F9",
+      "domain": "security",
+      "title": "En-têtes de sécurité de base absents",
+      "severity": "low",
+      "effort": "low",
+      "impact": "low",
+      "confidence": "measured",
+      "observation": "Les réponses n'envoient ni X-Content-Type-Options, ni Referrer-Policy, ni Content-Security-Policy, ni Permissions-Policy, et aucune politique de cache. Le risque reste faible vu l'absence de scripts, mais ces en-têtes sont peu coûteux. (HTTPS et CDN ne sont pas signalés, conformément à la consigne : site de test local.)",
+      "evidence": "facts.json : headers.x-content-type-options=null, referrer-policy=null, content-security-policy=null, permissions-policy=null, cache-control=null, server=SimpleHTTP/0.6 Python/3.x",
+      "action": "Ajouter 4 en-têtes de sécurité et une durée de cache sur les fichiers statiques.",
+      "pages": ["/"],
+      "owner": "host",
+      "fix_steps": [
+        "Dans la configuration du serveur, ajouter X-Content-Type-Options: nosniff.",
+        "Ajouter Referrer-Policy: strict-origin-when-cross-origin et Permissions-Policy: camera=(), microphone=(), geolocation=().",
+        "Ajouter Content-Security-Policy: default-src 'self'; form-action 'self'.",
+        "Ajouter Cache-Control: public, max-age=86400 sur les images et la feuille de style."
+      ],
+      "verify": "curl -I sur l'accueil : les 4 en-têtes sont présents.",
+      "execution": {
+        "mode": "assisted",
+        "risk": "medium",
+        "rollback": "Sauvegarder la configuration du serveur ; pour annuler, retirer les lignes d'en-têtes ajoutées.",
+        "needs": [
+          {
+            "id": "server_config_access",
+            "kind": "access",
+            "what": "Accès à la configuration du serveur web ou de l'hébergeur pour ajouter des en-têtes"
+          }
+        ]
+      }
+    },
+    {
+      "id": "F10",
+      "domain": "seo",
+      "title": "Pas de balises de partage social (Open Graph) sur les 5 pages",
+      "severity": "low",
+      "effort": "low",
+      "impact": "low",
+      "confidence": "measured",
+      "observation": "Sans balises og:title, og:description et og:image, un lien partagé sur WhatsApp, Facebook ou LinkedIn s'affiche sans image, ce qui est un handicap pour un photographe dont le travail passe par le bouche-à-oreille.",
+      "evidence": "crawl/summary.json : missing_og_image=5 ; crawl/pages.jsonl : has_og_title=false, has_og_image=false sur 5 pages ; facts.json : open_graph=[]",
+      "action": "Ajouter les balises Open Graph avec une belle photo de 1200 x 630 px.",
+      "pages": ["/", "/services.html", "/about.html", "/contact.html"],
+      "owner": "marketing",
+      "fix_steps": [
+        "Préparer une image de partage de 1200 x 630 px, une vraie photo de réalisation.",
+        "Dans le <head> de chaque page, ajouter og:title, og:description, og:image, og:url et og:type=website avec les textes de la page.",
+        "Tester un lien partagé dans le débogueur de partage de Facebook ou LinkedIn."
+      ],
+      "verify": "Relancer crawl.py : missing_og_image=0 ; le lien collé dans une conversation affiche l'image.",
+      "execution": {
+        "mode": "assisted",
+        "risk": "low",
+        "rollback": "",
+        "needs": [
+          {
+            "id": "real_photos",
+            "kind": "content",
+            "what": "6 à 9 photos de réalisations réelles, avec le droit de les publier"
+          },
+          {
+            "id": "site_files_access",
+            "kind": "access",
+            "what": "Accès aux fichiers du site ou au serveur pour modifier le HTML, sitemap.xml, robots.txt et les redirections"
+          }
+        ]
+      }
+    }
+  ],
+  "not_measured": [
+    "Données utilisateurs réelles (Search Console, CrUX) et INP : non disponibles, Lighthouse est un test de laboratoire simulé.",
+    "Lighthouse lancé sur l'accueil uniquement ; les pages Prestations et Contact ont été auditées par exploration (HTML) et lecture du code, sans capture d'écran ni mesure de vitesse.",
+    "Le formulaire de devis n'a pas été envoyé (audit en lecture seule) : message de confirmation, gestion des erreurs et destination de /devis non vérifiés.",
+    "Les captures d'écran ont été regardées pour l'accueil seulement.",
+    "HTTPS et CDN non évalués, conformément à la consigne (site de test local).",
+    "Les 5 pages trouvées sont toutes explorées (limite de 10 non atteinte)."
+  ]
+}

@@ -1,0 +1,129 @@
+{
+  "meta": {
+    "url": "https://example.com/",
+    "scope": "page",
+    "pages_audited": 1,
+    "date": "2026-01-15",
+    "device": "mobile",
+    "language": "en",
+    "objective": "Get visitors to start a free trial",
+    "objective_source": "inferred",
+    "verdict": "One sentence: what is solid, and the single problem that costs the most.",
+    "domains_audited": [
+      "technical",
+      "seo",
+      "performance",
+      "cro"
+    ],
+    "sources": [
+      "facts.json",
+      "lh/summary.json",
+      "shots/rendered.json",
+      "shots/mobile-01.png"
+    ],
+    "agent_access": "Tag manager container (edit rights through its API, token in the agent environment)"
+  },
+  "strengths": [
+    {
+      "domain": "technical",
+      "text": "HTTPS everywhere, www and http redirect to one canonical URL in a single hop.",
+      "evidence": "facts.json: site_level.http_to_https.hops=1, final_url=https://example.com/"
+    },
+    {
+      "domain": "seo",
+      "text": "Title (52 characters), meta description (148) and self-referencing canonical are all present.",
+      "evidence": "facts.json: title_len=52, meta_description_len=148, canonical_is_self=true"
+    },
+    {
+      "domain": "performance",
+      "text": "Largest Contentful Paint is good and stable across 3 runs.",
+      "evidence": "lh/summary.json: metrics.lcp_ms median 1900 (min 1850, max 1960)"
+    },
+    {
+      "domain": "cro",
+      "text": "The page makes one clear promise and one primary call to action above the fold.",
+      "evidence": "shots/mobile-01.png: headline + button 'Start free trial' visible without scrolling"
+    }
+  ],
+  "findings": [
+    {
+      "id": "F1",
+      "domain": "performance",
+      "title": "Third-party scripts block the main thread",
+      "severity": "high",
+      "effort": "medium",
+      "impact": "high",
+      "confidence": "measured",
+      "observation": "Total Blocking Time is far above the 200 ms target, mostly caused by analytics and tag scripts.",
+      "evidence": "lh/summary.json: metrics.tbt_ms median 850; digest.bootup_top[1]: analytics.js scripting 678 ms",
+      "action": "Load analytics after first interaction, drop duplicate tags, remove unused modules.",
+      "pages": [
+        "/"
+      ],
+      "owner": "developer",
+      "fix_steps": [
+        "Open the tag manager and list every tag that fires on page load (analytics, ads, chat).",
+        "Move analytics and chat to fire after the first user interaction or after consent.",
+        "Delete duplicate tags and any tag nobody uses.",
+        "Remove unused JavaScript modules from the theme or build."
+      ],
+      "verify": "Rerun lh_median.py on the page: median TBT at or under 200 ms and spread under 10 points.",
+      "execution": {
+        "mode": "agent",
+        "risk": "medium",
+        "rollback": "Save the current tag manager container version first; to undo, publish that previous version.",
+        "needs": [
+          {
+            "id": "tag_manager_access",
+            "kind": "access",
+            "what": "Edit rights on the tag manager container (Google Tag Manager or equivalent)",
+            "secret": true
+          },
+          {
+            "id": "consent_rules",
+            "kind": "decision",
+            "what": "Which tags may fire before consent, and which only after"
+          }
+        ]
+      }
+    },
+    {
+      "id": "F2",
+      "domain": "cro",
+      "title": "No proof near the main button",
+      "severity": "medium",
+      "effort": "low",
+      "impact": "medium",
+      "confidence": "deduced",
+      "observation": "No testimonial, number of customers or logo appears within the first two screens.",
+      "evidence": "facts.json: no testimonial markup, 0 matches for review/rating terms; shots/mobile-02.png: second screen read",
+      "action": "Add one line of concrete proof (a number, a named result) under the headline.",
+      "pages": [
+        "/"
+      ],
+      "owner": "content",
+      "fix_steps": [
+        "Pick one real proof: a number of customers, a named result, or a short quote with a name.",
+        "Write one line under the headline, for example '1,200 teams started this month' with the real figure.",
+        "Check it fits on the first mobile screen without pushing the button down."
+      ],
+      "verify": "Open the page on a phone: the proof line is visible next to the main button without scrolling.",
+      "execution": {
+        "mode": "assisted",
+        "risk": "low",
+        "rollback": "",
+        "needs": [
+          {
+            "id": "real_proof",
+            "kind": "content",
+            "what": "One real customer number, or a quote with permission to publish it"
+          }
+        ]
+      }
+    }
+  ],
+  "not_measured": [
+    "Real-user data (Search Console, CrUX) and INP: not available.",
+    "Only the home page was audited, not the checkout or sign-up flow."
+  ]
+}

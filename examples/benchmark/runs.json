@@ -1,0 +1,144 @@
+{
+  "note": "Raw figures of the runs quoted in the README. One run each, Claude Sonnet through Claude Code, clean environment. Cost = API-equivalent cost reported by Claude Code (total_cost_usd), not an invoice. Order of magnitude, not a benchmark.",
+  "runs": [
+    {
+      "id": "F3_real_1",
+      "what": "20-page audit of a real site, outside view",
+      "wall_s": 229,
+      "model_time_s": 228,
+      "turns": 25,
+      "cost_usd": 0.39,
+      "ok": true
+    },
+    {
+      "id": "F3_real_2",
+      "what": "20-page audit of a second real site, outside view",
+      "wall_s": 328,
+      "model_time_s": 327,
+      "turns": 28,
+      "cost_usd": 0.44,
+      "ok": true
+    },
+    {
+      "id": "H_audit",
+      "what": "audit of the local test site (4 pages), before the fix conversation",
+      "wall_s": 164,
+      "model_time_s": 162,
+      "turns": 27,
+      "cost_usd": 0.37,
+      "ok": true
+    },
+    {
+      "id": "H_audit2",
+      "what": "re-audit of the same test site after the fix conversation",
+      "wall_s": 157,
+      "model_time_s": 155,
+      "turns": 29,
+      "cost_usd": 0.35,
+      "ok": true
+    },
+    {
+      "id": "J1_real_2",
+      "what": "audit of a real site, outside view, 12 pages",
+      "wall_s": 375,
+      "model_time_s": 374,
+      "turns": 35,
+      "cost_usd": 0.52,
+      "ok": true
+    },
+    {
+      "id": "J2_inside",
+      "what": "audit of the local test site, outside + inside (site files)",
+      "wall_s": 202,
+      "model_time_s": 200,
+      "turns": 45,
+      "cost_usd": 0.49,
+      "ok": true
+    },
+    {
+      "id": "H_fic",
+      "what": "20-page audit of the fictional community site, outside + inside (WordPress REST), examples/community-site/",
+      "wall_s": 270,
+      "model_time_s": 269,
+      "turns": 44,
+      "cost_usd": 0.69,
+      "ok": true
+    }
+  ],
+  "fix_conversation": {
+    "exchanges": [
+      {
+        "exchange": 1,
+        "wall_s": 25,
+        "turns": 10,
+        "cost_usd": 0.15
+      },
+      {
+        "exchange": 2,
+        "wall_s": 96,
+        "turns": 26,
+        "cost_usd": 0.36
+      },
+      {
+        "exchange": 3,
+        "wall_s": 11,
+        "turns": 3,
+        "cost_usd": 0.38
+      },
+      {
+        "exchange": 4,
+        "wall_s": 37,
+        "turns": 16,
+        "cost_usd": 0.49
+      }
+    ],
+    "total_wall_s": 169,
+    "total_cost_usd": 0.49,
+    "cost_note": "The cost reported by Claude Code in a resumed session is cumulative (exchange 3 adds 3 turns for +0.02), so the total is the last value. This is an inference from those figures, not a documented guarantee."
+  },
+  "fix_session_before_after": {
+    "before": {
+      "overall": 87,
+      "scores": {
+        "technical": 92,
+        "seo": 73,
+        "performance": 100,
+        "accessibility": 92,
+        "ux": 92,
+        "cro": 66,
+        "copy": 84,
+        "security": 97,
+        "privacy_tracking": 100,
+        "ai_visibility": 100
+      },
+      "severities": {
+        "high": 4,
+        "medium": 5,
+        "low": 3
+      },
+      "findings": 12
+    },
+    "after": {
+      "overall": 91,
+      "scores": {
+        "technical": 97,
+        "seo": 69,
+        "performance": 100,
+        "accessibility": 89,
+        "ux": 98,
+        "cro": 80,
+        "copy": 100,
+        "security": 97,
+        "privacy_tracking": 100,
+        "ai_visibility": 100
+      },
+      "severities": {
+        "high": 2,
+        "medium": 3,
+        "low": 5
+      },
+      "findings": 10
+    },
+    "source": "report.json and findings.json of the two audits, kept in examples/benchmark/"
+  }
+}

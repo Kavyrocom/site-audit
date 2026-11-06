@@ -1,0 +1,28 @@
+{
+  "overall": 91,
+  "scores": {
+    "technical": 97,
+    "seo": 69,
+    "performance": 100,
+    "accessibility": 89,
+    "ux": 98,
+    "cro": 80,
+    "copy": 100,
+    "security": 97,
+    "privacy_tracking": 100,
+    "ai_visibility": 100
+  },
+  "top_priorities": [
+    "F2",
+    "F1",
+    "F3",
+    "F4",
+    "F5"
+  ],
+  "counts": {
+    "critical": 0,
+    "high": 2,
+    "medium": 3,
+    "low": 5
+  }
+}

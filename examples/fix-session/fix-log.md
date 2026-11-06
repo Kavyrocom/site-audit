@@ -1,0 +1,17 @@
+- 2026-11-05T09:47:29Z init: 12 actions, 12 needs, score before 87/100
+- 2026-11-05T09:47:35Z need acces_fichiers_site: provided (ref site_dir)
+- 2026-11-05T09:48:12Z need champs_devis: provided
+- 2026-11-05T09:48:18Z F1: GO by Alex
+- 2026-11-05T09:48:47Z F1: DONE (render.py: bouton 'Demander un devis gratuit' top=171 (<700), h=50 (>=44), ligne de reassurance presente)
+- 2026-11-05T09:48:48Z F2: GO by Alex
+- 2026-11-05T09:48:56Z F2: DONE (contact.html: required sur nom et email, type=tel et type=date presents, champs societe et budget supprimes (grep 0), bouton 'Recevoir mon devis gratuit'. Envoi)
+- 2026-11-05T09:49:00Z F4: GO by Alex OUT OF ORDER (P3 bloquee (pas de photos), Alex: GO groupe pour P1, P2, P4 et P8)
+- 2026-11-05T09:49:12Z F4: DONE (crawl.py: title_too_long absent; titres 53 et 50 caracteres, distincts. Reste duplicate_titles=1 qui est / vs /index.html (meme fichier), a traiter par le canon)
+- 2026-11-05T09:49:13Z F8: GO by Alex OUT OF ORDER (P3 bloquee, Alex: GO groupe pour P1, P2, P4 et P8)
+- 2026-11-05T09:49:33Z F8: DONE (render.py accueil: small tap targets 0 (avant 2-3); nav avec lien Devis ajoutee sur index, services, about, contact (4 fichiers HTML existants))
+- 2026-11-05T09:50:22Z need decision_noindex_about: provided
+- 2026-11-05T09:50:23Z need url_publique: provided
+- 2026-11-05T09:51:33Z F5: GO by Alex OUT OF ORDER (P3 bloquee; Alex: GO pour P5 puis P6, retour arriere confirme)
+- 2026-11-05T09:51:44Z F5: DONE (curl /about.html: noindex 0 occurrence, 1 H1 present. Photo de Camille et preuves non ajoutees (contenu a fournir, voir P3))
+- 2026-11-05T09:51:45Z F6: GO by Alex OUT OF ORDER (P3 bloquee; Alex: GO pour P5 puis P6, adresse https://studio-zorbul.example/)
+- 2026-11-05T09:52:00Z F6: DONE (crawl.py: missing_meta_description, multiple_h1, canonical_missing, missing_h1 et noindex_pages ont disparu; curl /sitemap.xml = 200; robots.txt contient la lig)
