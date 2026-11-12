@@ -26,6 +26,7 @@ from collections import Counter, defaultdict
 from concurrent.futures import ThreadPoolExecutor
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import botwall  # noqa: E402
 import robotsrules  # noqa: E402
 import safenet  # noqa: E402
 from facts import DEFAULT_UA, PageParser, fetch, jsonld_types  # noqa: E402
@@ -116,11 +117,17 @@ def parse_sitemap(url, ua, budget=5000, depth=0, seen=None):
 
 
 def analyse(url, ua, depth, hop_check=None):
-    r = fetch(url, ua, timeout=25, hop_check=hop_check)
+    r = fetch(url, ua, timeout=25, hop_check=hop_check, error_body=True)
     rec = {"url": url, "final_url": r["final_url"], "status": r["status"], "redirect_hops": len(r["chain"]),
            "ttfb_ms": r["ttfb_ms"], "bytes": r["bytes"], "depth": depth, "error": r["error"],
            "content_type": r["headers"].get("content-type", ""), "x_robots_tag": r["headers"].get("x-robots-tag")}
     links = []
+    wall = botwall.detect(r["status"], r["headers"], r["body"]) if not r["error"] else None
+    if wall and (wall["confidence"] == "high" or r["status"] >= 400):
+        rec["bot_wall"] = wall            # the answer is a protection page, not the page: it is set aside, never parsed
+        return rec, links
+    if wall:
+        rec["bot_wall_suspect"] = wall    # wording of a verification page on a thin page: kept, and reported
     if r["status"] == 200 and "html" in rec["content_type"].lower() and r["body"]:
         p = PageParser(r["final_url"])
         p.feed(r["body"])
@@ -318,7 +325,9 @@ def main():
     ok = [r for r in recs if r["status"] == 200 and "title" in r]
     cap = lambda lst, n=20: lst[:n]
     issues = {}
-    issues["error_pages"] = cap([{"url": r["url"], "status": r["status"], "error": r["error"], "found_on": cap(sorted(inlinks.get(r["url"], [])), 3)} for r in recs if (r["status"] >= 400 or r["status"] == 0) and "robots.txt forbids" not in str(r["error"])])
+    issues["error_pages"] = cap([{"url": r["url"], "status": r["status"], "error": r["error"], "found_on": cap(sorted(inlinks.get(r["url"], [])), 3)} for r in recs if (r["status"] >= 400 or r["status"] == 0) and "robots.txt forbids" not in str(r["error"]) and not r.get("bot_wall")])
+    walls = [r for r in recs if r.get("bot_wall")]
+    issues["blocked_by_bot_protection"] = cap([{"url": r["url"], "status": r["status"], "vendor": r["bot_wall"]["vendor"], "kind": r["bot_wall"]["kind"]} for r in walls])
     broken = [{"url": u, "status": s, "found_on": cap(sorted(inlinks.get(u, [])), 3)} for u, (s, _) in link_status.items() if s in (404, 410) or 500 <= s < 600 and s != 503 or s == 0]
     issues["broken_internal_links_not_crawled"] = cap(broken)
     issues["links_redirecting_to_forbidden_areas"] = cap([u for u, (s, _) in link_status.items() if s == BEHIND_ROBOTS] + [r["url"] for r in recs if r["status"] == 0 and "robots.txt forbids" in str(r["error"])])
@@ -366,15 +375,26 @@ def main():
     warnings = []
     if recs and recs[0]["status"] == 200 and recs[0].get("words", 0) < 80 and recs[0].get("scripts", 0) > 5:
         warnings.append("Start page has almost no text but many scripts: the site is probably rendered by JavaScript. This crawl only sees the initial HTML.")
+    if walls:
+        w0 = walls[0]["bot_wall"]
+        if recs[0].get("bot_wall"):
+            warnings.append(f"The start page was not audited: {botwall.one_line(w0)}. {botwall.GUIDANCE}")
+        else:
+            warnings.append(f"{len(walls)} page(s) answered with a bot-protection page and were set aside, not counted as pages of the site "
+                            f"({botwall.one_line(w0)}). The crawl is a sample, and the protection may have started after too many requests: "
+                            "say so, do not conclude about the pages that were not read.")
+    suspects = [r["url"] for r in recs if r.get("bot_wall_suspect")]
+    if suspects:
+        warnings.append(f"{len(suspects)} page(s) carry the wording of a verification page ({suspects[0]}): look at them before you trust their figures.")
     if len(pages) >= a.max_pages:
         warnings.append(f"Page cap reached ({a.max_pages}): results describe a sample, not the whole site.")
     if skipped_robots:
         warnings.append(f"{len(skipped_robots)} URL(s) skipped because robots.txt disallows them.")
     summary = {
         "start": start, "pages_crawled": len(pages), "max_pages": a.max_pages, "cap_reached": len(pages) >= a.max_pages,
-        "crawl_complete": bool(complete), "bfs_pages": len(pages) - len(sampled), "sitemap_sampled_pages": len(sampled),
+        "crawl_complete": bool(complete) and not walls, "bfs_pages": len(pages) - len(sampled), "sitemap_sampled_pages": len(sampled),
         "max_depth_reached": max([r["depth"] for r in recs] + [0]), "duration_s": round(time.time() - t0, 1),
-        "status_counts": dict(Counter(r["status"] for r in recs)), "robots_skipped": len(skipped_robots),
+        "status_counts": dict(Counter(r["status"] for r in recs)), "robots_skipped": len(skipped_robots), "pages_blocked_by_bot_protection": len(walls),
         "internal_links_discovered": len(discovered_internal), "links_checked_by_head": len(link_status),
         "avg_words_html_pages": round(sum(r.get("words", 0) for r in ok) / max(1, len(ok))),
         "warnings": warnings, "issues": issues,
@@ -389,6 +409,9 @@ def main():
         json.dump(summary, fh, ensure_ascii=False, indent=2)
     print(json.dumps({k: summary[k] for k in ("start", "pages_crawled", "cap_reached", "crawl_complete", "bfs_pages", "sitemap_sampled_pages", "status_counts", "duration_s", "warnings")}, ensure_ascii=False, indent=2))
     print("issue counts:", {k: (len(v) if isinstance(v, list) else v.get("total", "")) for k, v in issues.items() if k != "sitemap" and v})
+    if recs and recs[0].get("bot_wall"):
+        print(f"the start page is not the site: {botwall.one_line(recs[0]['bot_wall'])}. {botwall.GUIDANCE}", file=sys.stderr)
+        return 1
     if not pages:
         print("nothing was crawled (robots.txt, an unreachable site or a refused address): do not audit the site-wide parts from memory", file=sys.stderr)
         return 1

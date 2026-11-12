@@ -55,6 +55,29 @@ class ValidateTests(unittest.TestCase):
         errs, _ = br.validate(d)
         self.assertTrue(any("em dash" in e for e in errs))
 
+    def test_em_dash_inside_a_verbatim_quote_of_the_site_is_kept(self):
+        for quote in ('The title says "Shop \u2014 plants"', 'Title: \u201cShop \u2014 plants\u201d', 'Titre : \u00abShop \u2014 plants\u00bb', 'Title is `Shop \u2014 plants`'):
+            d = load()
+            d["findings"][0]["evidence"] += " " + quote
+            errs, _ = br.validate(d)
+            self.assertEqual([e for e in errs if "em dash" in e], [], quote)
+
+    def test_em_dash_outside_the_quote_is_still_refused_and_the_message_says_where(self):
+        d = load()
+        d["findings"][0]["evidence"] += ' The title says "Shop \u2014 plants" \u2014 which is too long.'
+        errs, _ = br.validate(d)
+        hits = [e for e in errs if "em dash" in e]
+        self.assertEqual(len(hits), 1)
+        self.assertIn("findings[0].evidence", hits[0])
+        self.assertIn("outside a quotation", hits[0])
+
+    def test_em_dash_in_a_quote_does_not_hide_one_in_the_next_sentence_of_another_field(self):
+        d = load()
+        d["findings"][0]["evidence"] += ' "a \u2014 b"'
+        d["findings"][1]["action"] += " now \u2014 later"
+        errs, _ = br.validate(d)
+        self.assertTrue(any("em dash" in e and "findings[1].action" in e for e in errs), errs)
+
     def test_fix_steps_verify_owner_are_required(self):
         for key in ("fix_steps", "verify", "owner"):
             d = load()
@@ -190,6 +213,21 @@ class CliTests(unittest.TestCase):
                 with open(out, encoding="utf-8") as fh:
                     md = fh.read()
             return p, md
+
+    def test_cli_writes_the_report_with_a_quoted_em_dash_and_nothing_else_in_it(self):
+        d = load()
+        d["findings"][0]["evidence"] += ' The page title is "Shop \u2014 plants".'
+        p, md = self.run_cli(d)
+        self.assertEqual(p.returncode, 0, p.stderr)
+        self.assertIn("Shop \u2014 plants", md)
+        self.assertNotIn("\u2014", md.replace("Shop \u2014 plants", ""))     # the only em dashes in the report are the quoted ones
+
+    def test_cli_refuses_a_report_whose_prose_has_an_em_dash(self):
+        d = load()
+        d["meta"]["verdict"] = "Good \u2014 mostly"
+        p, md = self.run_cli(d)
+        self.assertEqual(p.returncode, 2)
+        self.assertIsNone(md)
 
     def test_cli_renders_report(self):
         p, md = self.run_cli(load())

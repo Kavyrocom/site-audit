@@ -108,6 +108,16 @@ MUTANTS = {
     "M86": ("an action plan with ticked boxes is overwritten", SC + "build_report.py", "if os.path.exists(plan_path) and not a.overwrite_plan:", "if False:", ["test_guard_proxy_and_tracker.py"]),
     "M88": ("a second srcset candidate over http is not counted", SC + "facts.py", 'urls += [cand.strip().split()[0] for cand in val.split(",") if cand.strip()]', "urls += []", ["test_guard_proxy_and_tracker.py"]),
     "M89": ("an AI robot's own group in robots.txt is ignored", SC + "facts.py", 'rb = robotsrules.Robots(status, robots_body or "", tok)', 'rb = robotsrules.Robots(status, robots_body or "", "SiteAuditSkill")', ["test_guard_proxy_and_tracker.py"]),
+    "M123": ("a challenge page served with status 200 is audited as the site", SC + "facts.py", 'or (bw and bw["confidence"] == "high"):', ":", ["test_botwall.py"]),
+    "M124": ("a long real page that quotes a protection's wording is taken for a protection page", SC + "botwall.py", "thin = words <= THIN_WORDS", "thin = True", ["test_botwall.py"]),
+    "M125": ("the passive Cloudflare script alone makes a protection page", SC + "botwall.py", "/cdn-cgi/challenge-platform/h/[a-z]/orchestrate/", "/cdn-cgi/challenge-platform/", ["test_botwall.py"]),
+    "M126": ("the crawl counts a protection page as a page of the site", SC + "crawl.py", 'if wall and (wall["confidence"] == "high" or r["status"] >= 400):', "if False:", ["test_botwall.py"]),
+    "M127": ("an em dash inside a verbatim quote of the site is refused", SC + "build_report.py", 'return FORBIDDEN in QUOTED.sub(" ", text)', "return FORBIDDEN in text", ["test_build_report.py"]),
+    "M128": ("an em dash in the prose of the report is accepted", SC + "build_report.py", 'return FORBIDDEN in QUOTED.sub(" ", text)', "return False", ["test_build_report.py"]),
+    "M129": ("doctor prints the value of the Google key", SC + "doctor.py", 'f"found in ${key}"', 'f"found in ${key}={os.environ[key]}"', ["test_doctor.py"]),
+    "M130": ("doctor fails when an optional piece is missing", SC + "doctor.py", "return 0 if python_ok else 1", 'return 0 if all(i["status"] == "ok" for i in items) else 1', ["test_doctor.py"]),
+    "M131": ("a protection page is reported as a plain unreachable page, without its name", SC + "facts.py", "        if bw:\n            print(f\"page not audited:", "        if False:\n            print(f\"page not audited:", ["test_botwall.py"]),
+    "M132": ("a refusal from a protection server with no site content is not recognised", SC + "botwall.py", "if status in REFUSING and server_vendor and thin:", "if False:", ["test_botwall.py"]),
     "M50": ("a non-http address is accepted", SC + "safenet.py", [('if m and m.group(1).lower() not in ("http", "https"):', "if False:"), ("    if other:", "    if False:")], "", ["test_report_scoring_and_order.py"]),
 }
 

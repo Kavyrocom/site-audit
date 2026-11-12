@@ -40,6 +40,7 @@ import urllib.parse
 import urllib.request
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import botwall  # noqa: E402
 import safenet  # noqa: E402
 import netguard  # noqa: E402
 
@@ -405,6 +406,9 @@ def main():
             result["guard_connections"] = browser.proxy.served          # proof that Chrome really went through the filter
             if browser.proxy.refused:
                 result["blocked_by_proxy"] = browser.proxy.refused[:20]
+        wall = botwall.detect(200, {}, "", title=result["mobile"].get("title"), text=result["mobile"].get("text", ""))
+        if wall:
+            result["bot_wall"] = wall
         with open(os.path.join(a.out, "rendered-mobile.txt"), "w", encoding="utf-8") as fh:
             fh.write(result["mobile"].get("text", ""))
         for k in ("mobile", "desktop"):
@@ -417,6 +421,11 @@ def main():
         for f in m["fixed_or_sticky"]:
             print(f"  fixed/sticky: <{f['tag']}> covers {f['screen_covered_pct']}% of the screen, text: {f['text'][:70]!r}")
         print(f"desktop: {len(result['desktop']['screens'])} screens; written to {a.out}/rendered.json and rendered-mobile.txt")
+        if wall:
+            print(f"{'STOP' if wall['confidence'] == 'high' else 'warning'}: {botwall.one_line(wall)} (confidence {wall['confidence']}). "
+                  f"The screens show that page, not the site: do not judge UX, conversion or copy from them. {botwall.GUIDANCE if wall['confidence'] == 'high' else ''}".rstrip(),
+                  file=sys.stderr)
+            return 1 if wall["confidence"] == "high" else 0
         return 0
     except StopIteration:
         sys.exit("Chrome started but exposed no page target.")

@@ -113,7 +113,14 @@ L = {
         "method_txt": "Every finding carries evidence, severity, effort, impact and a confidence level. Domain score = 100 minus the sum of penalties (critical 40, high 20, medium 8, low 3), reduced to 70% when deduced and 40% when a hypothesis (the report also gives the score if all those uncertain findings turn out true). The overall score is the weighted mean of the audited domains. Priorities are ranked by severity x impact / effort, weighted by confidence.",
     },
 }
-FORBIDDEN = "\u2014"  # em dash: never in deliverables we publish
+FORBIDDEN = "\u2014"  # em dash: never in the prose of a deliverable
+# A verbatim quotation of the audited site is evidence: it keeps the characters the site uses, an em dash included.
+# A quotation is a span between "..." or curly double quotes, French guillemets, or backticks, on one line.
+QUOTED = re.compile(r'"[^"\n]*"|\u201c[^\u201d\n]*\u201d|\u00ab[^\u00bb\n]*\u00bb|`[^`\n]*`')
+
+
+def forbidden_outside_quotes(text):
+    return FORBIDDEN in QUOTED.sub(" ", text)
 
 
 def _texts(node, path="$"):
@@ -275,9 +282,11 @@ def validate(d):
         if personal:
             msg = f"{path}: contains personal data ({', '.join(personal)}): an email address, an IP address or a phone number. Aggregate (a count, a role) or mask it"
             (errs if internal else warns).append(msg + ("" if internal else " (public contact details of the audited site are tolerated in an outside audit; check it is not someone's private data)"))
-    blob = json.dumps(d, ensure_ascii=False)
-    if FORBIDDEN in blob:
-        errs.append("text contains an em dash (U+2014): replace it with a colon, a comma or a period")
+    for path, text in _texts(d):
+        if forbidden_outside_quotes(text):
+            errs.append(f"{path}: text contains an em dash (U+2014) outside a quotation: replace it with a colon, a comma or a period "
+                        "(a verbatim quote of the audited site, between quotation marks or backticks, may keep its own characters)")
+            break
     if meta.get("scope") == "page" and any("pages" in f and len(f.get("pages") or []) > 1 for f in findings):
         warns.append("scope is 'page' but a finding lists several pages")
     return errs, warns
@@ -511,12 +520,12 @@ def main():
     except (KeyError, TypeError, AttributeError, ValueError) as e:
         print(f"the findings file is malformed ({type(e).__name__}: {e}); report NOT written", file=sys.stderr)
         return 2
-    if FORBIDDEN in md:
-        print("rendered report contains an em dash, refusing", file=sys.stderr)
+    if forbidden_outside_quotes(md):
+        print("rendered report contains an em dash outside a quotation, refusing", file=sys.stderr)
         return 2
     plan_md = render_plan(d, overall, plan)
-    if FORBIDDEN in plan_md:
-        print("rendered action plan contains an em dash, refusing", file=sys.stderr)
+    if forbidden_outside_quotes(plan_md):
+        print("rendered action plan contains an em dash outside a quotation, refusing", file=sys.stderr)
         return 2
     plan_path = a.plan or os.path.join(os.path.dirname(os.path.abspath(a.out)), "action-plan.md")
     if os.path.exists(plan_path) and not a.overwrite_plan:

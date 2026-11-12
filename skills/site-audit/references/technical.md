@@ -4,7 +4,7 @@ Sources: `facts.json` (`status`, `redirect_chain`, `site_level`, `headers`, `mix
 
 ## Check
 
-1. **Reachability.** Status 200 on the target. Any 4xx or 5xx on linked pages: list them with the pages that link to them (`crawl` `error_pages`, `broken_internal_links_not_crawled`).
+1. **Reachability.** Status 200 on the target, and an answer that is the site: if a script reports `bot_wall` (a challenge, block or verification page from a bot protection), what it received is not the site. Stop, do not audit that page, ask the owner to allow the audit machine; never try to get past the protection. A page that is behind such a protection for an ordinary visitor too (a challenge shown to everyone) is itself a finding. Any 4xx or 5xx on linked pages: list them with the pages that link to them (`crawl` `error_pages`, `broken_internal_links_not_crawled`).
 2. **One canonical host.** `site_level.http_to_https.ok` true in at most 1 hop. The `www` or non-`www` twin must redirect in one hop to the version that is canonical (`alt_host_*`). Several live versions = duplicate content.
 3. **Redirects.** Chains of 2 or more hops (`redirect_chains_2plus_hops`) waste crawl budget and time: link straight to the final URL. Internal links that go through a redirect: fix the link.
 4. **Soft 404.** `site_level.soft_404_test.status` must be 404 (410 is fine too). A 200, or a redirect to the home page, makes errors indexable.

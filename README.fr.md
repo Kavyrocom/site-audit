@@ -48,6 +48,7 @@ La plupart des prompts d'audit te donnent une longue liste de conseils génériq
 
 | Script | Rôle |
 |---|---|
+| `doctor.py` | un contrôle en lecture seule avant le premier audit : ce que cette machine sait exécuter (Python, Chrome, Lighthouse, Unlighthouse, une clé Google par le nom de la variable), ce que coûte chaque élément absent et comment l'installer |
 | `facts.py` | head, titres, images, liens, formulaires, en-têtes, traqueurs, robots, sitemaps, redirections, faux 404 |
 | `lh_median.py` | Lighthouse en série, médiane, écart, coupables (machine au repos seulement : une machine occupée fausse la mesure) |
 | `psi.py` | la mesure fraîche de Google plus les données de vrais visiteurs (CrUX), avec leur portée (cette page ou tout le site), leur période de 28 jours, leur âge et leur tendance ; demande une clé d'API gratuite |
@@ -58,6 +59,7 @@ La plupart des prompts d'audit te donnent une longue liste de conseils génériq
 | `access_check.py` | preuve en lecture seule qu'un accès ssh, WordPress, FTP ou dossier fonctionne, et ce qu'il permet |
 | `redact.py` | masque secrets, adresses e-mail, adresses IP, numéros de téléphone et adresses postales dans la sortie d'une commande avant qu'elle soit gardée comme preuve |
 | `render.py` | vrais écrans à plusieurs positions de défilement, texte et boutons après JavaScript, bandeaux fixes et part de l'écran qu'ils couvrent |
+| `botwall.py` | utilisé par `facts.py`, `crawl.py` et `render.py` : reconnaît une page de protection anti-bot (défi, blocage, vérification) pour qu'elle ne soit jamais auditée comme si c'était le site. Il n'essaie jamais de contourner la protection |
 | `build_report.py` | refuse les constats sans preuve, calcule les notes, classe les priorités, écrit `report.md` et `action-plan.md` |
 | `fix_tracker.py` | l'arbitre du mode correction : ordre de priorité, un GO par action, rien ne démarre s'il manque quelque chose, aucun secret stocké |
 
@@ -226,6 +228,7 @@ Les scripts de mesure ne coûtent rien et tournent en quelques secondes (Lightho
 ## Limites, dites franchement
 
 - Les chiffres Lighthouse sont des mesures **labo**, faites au moment de l'audit. Les données de vrais visiteurs (CrUX) sont un agrégat sur 28 jours : elles ne sont **pas fraîches**, elles ne changent que lentement après une correction, et elles n'existent que si la page a assez de trafic (sinon on n'a que le site entier, et le rapport le dit). `psi.py` demande une **clé API Google gratuite** ; sans elle, ces données sont « non mesurées ». L'INP n'existe que dans ces données réelles.
+- Un site dont la protection (Cloudflare, Sucuri, Akamai et équivalents) arrête la machine d'audit ne peut pas être audité de l'extérieur : les scripts reconnaissent la page de défi ou de blocage, le disent et s'arrêtent. Ils n'essaient jamais de la contourner. Demande au propriétaire d'autoriser l'adresse de la machine d'audit, ou audite une copie du site.
 - Le crawl lit le HTML initial. Les sites rendus en JavaScript sont signalés, et `render.py` lit la page rendue pour l'URL auditée uniquement.
 - Les constats de conversion et de copy sont des **jugements** (`deduced`), pas des mesures. Ils viennent avec une citation ou un écran, et un test pour les confirmer.
 - Les scores sont indicatifs : un modèle de pénalités transparent (critique 40, élevée 20, moyenne 8, faible 3, réduites à 70 % si déduit et 40 % si hypothèse), pas une norme. Deux passages sur le même site peuvent différer de quelques points.
@@ -242,7 +245,7 @@ Les scripts de mesure ne coûtent rien et tournent en quelques secondes (Lightho
 python3 -I -m unittest discover -s tests
 ```
 
-289 tests hors ligne : un faux site local pour le crawler et le script de faits, le validateur, le calcul des scores et le plan d'action, les règles du mode correction (ordre, GO, éléments manquants, secrets), le détecteur d'incohérences (contradictions plantées, et choses qui y ressemblent sans en être), un faux serveur Google pour `psi.py` (fraîcheur, périmètre page ou site, données périmées, clé absente), un vrai Chrome pour `devtools.py` (cookies, tiers, test du bouton « refuser ») et pour le rendu (ignoré si Chrome est absent), les contrôles d'accès (un `sshd` jetable si disponible), et le masquage des secrets. Une suite d'entrées hostiles couvre les redirections vers `file://` et les adresses privées (par redirection, par script, par sitemap), une règle robots visant le crawler, un bouton « refuser » dans un formulaire ou relié à un formulaire, les secrets dans les notes, et une page hostile qui tente d'atteindre un service interne depuis un vrai Chrome (iframe d'un autre site, service worker, WebSocket, préchargement) ou une règle robots.txt conçue pour bloquer le crawler. `python3 -I tests/mutation_check.py` casse 86 règles une à une sur une copie du dépôt, vérifie d'abord que la copie intacte est verte, et ne compte un mutant comme détecté que si un test échoue sur une vérification, pas parce que le code a simplement planté.
+320 tests hors ligne : un faux site local pour le crawler et le script de faits, le validateur, le calcul des scores et le plan d'action, les règles du mode correction (ordre, GO, éléments manquants, secrets), le détecteur d'incohérences (contradictions plantées, et choses qui y ressemblent sans en être), un faux serveur Google pour `psi.py` (fraîcheur, périmètre page ou site, données périmées, clé absente), un vrai Chrome pour `devtools.py` (cookies, tiers, test du bouton « refuser ») et pour le rendu (ignoré si Chrome est absent), les contrôles d'accès (un `sshd` jetable si disponible), et le masquage des secrets. Une suite d'entrées hostiles couvre les redirections vers `file://` et les adresses privées (par redirection, par script, par sitemap), une règle robots visant le crawler, un bouton « refuser » dans un formulaire ou relié à un formulaire, les secrets dans les notes, et une page hostile qui tente d'atteindre un service interne depuis un vrai Chrome (iframe d'un autre site, service worker, WebSocket, préchargement) ou une règle robots.txt conçue pour bloquer le crawler. `python3 -I tests/mutation_check.py` casse 96 règles une à une sur une copie du dépôt, vérifie d'abord que la copie intacte est verte, et ne compte un mutant comme détecté que si un test échoue sur une vérification, pas parce que le code a simplement planté.
 
 ## Crédits
 

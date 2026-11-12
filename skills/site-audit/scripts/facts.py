@@ -28,6 +28,7 @@ import zlib
 from html.parser import HTMLParser
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import botwall  # noqa: E402
 import robotsrules  # noqa: E402
 import safenet  # noqa: E402
 
@@ -67,6 +68,7 @@ class NoRedirect(urllib.request.HTTPRedirectHandler):
 
 _opener = urllib.request.build_opener(NoRedirect)
 MAX_BODY = 8_000_000
+ERROR_BODY_MAX = 65536          # a protection page is small; this is all that is read of a 4xx or 5xx body
 
 
 def _charset(hdrs, raw):
@@ -149,14 +151,15 @@ def _result(status, hdrs, body, nbytes, final, chain, ttfb, error, truncated=Fal
             "chain": chain, "ttfb_ms": ttfb, "error": error, "truncated": truncated}
 
 
-def fetch(url, ua, method="GET", max_hops=6, timeout=30, want_body=True, max_bytes=MAX_BODY, allow_private=None, gunzip_file=False, hop_check=None):
+def fetch(url, ua, method="GET", max_hops=6, timeout=30, want_body=True, max_bytes=MAX_BODY, allow_private=None, gunzip_file=False, hop_check=None, error_body=False):
     """GET following redirects manually. Returns dict with chain, status, headers, body, ttfb_ms.
 
     Every hop goes through safenet.check(): only http(s), and a public start URL never leads to a private
     address. `allow_private=None` means: allowed only when the start URL is itself local or private.
     The body is read up to `max_bytes` (then `truncated` is true), whatever the server sends, and the whole head of
     the response must arrive within `timeout` seconds. `hop_check(url)` may return a reason to refuse a redirect target
-    (the crawler uses it to keep to robots.txt after a redirect).
+    (the crawler uses it to keep to robots.txt after a redirect). `error_body=True` also keeps the first bytes of the
+    body of a 4xx or 5xx answer (a bot-protection page says what it is there); otherwise that body is dropped.
     """
     chain = []
     cur = url
@@ -187,8 +190,17 @@ def fetch(url, ua, method="GET", max_hops=6, timeout=30, want_body=True, max_byt
                     body = raw
             return _result(status, hdrs, decode_body(body, hdrs), len(raw), cur, chain, ttfb, None, truncated)
         except urllib.error.HTTPError as e:
-            e.close()
             status, hdrs = e.code, {k.lower(): v for k, v in e.headers.items()}
+            err_body = ""
+            if error_body and want_body and method == "GET" and status >= 400:
+                try:
+                    raw_err, _ = _read_by_deadline(e, ERROR_BODY_MAX, 5)
+                    if hdrs.get("content-encoding", "").strip().lower() == "gzip":
+                        raw_err, _ = _gunzip(raw_err, ERROR_BODY_MAX)
+                    err_body = decode_body(raw_err, hdrs)
+                except Exception:
+                    err_body = ""
+            e.close()
             ttfb = ttfb if ttfb is not None else round((time.time() - t0) * 1000)
             if status in (301, 302, 303, 307, 308) and hdrs.get("location"):
                 nxt = urllib.parse.urljoin(cur, hdrs["location"])
@@ -198,7 +210,7 @@ def fetch(url, ua, method="GET", max_hops=6, timeout=30, want_body=True, max_byt
                     return _result(0, {}, "", 0, cur, chain, ttfb, refusal)
                 cur = nxt
                 continue
-            return _result(status, hdrs, "", 0, cur, chain, ttfb, None)
+            return _result(status, hdrs, err_body, len(err_body), cur, chain, ttfb, None)
         except Exception as e:  # network, TLS, timeout
             return _result(0, {}, "", 0, cur, chain, ttfb, f"{type(e).__name__}: {e}")
     return _result(0, {}, "", 0, cur, chain, ttfb, "too many redirects")
@@ -449,15 +461,23 @@ def main():
     if not urllib.parse.urlparse(url).path:
         url += "/"
 
-    r = fetch(url, args.ua)
+    r = fetch(url, args.ua, error_body=True)
+    bw = botwall.detect(r["status"], r["headers"], r["body"]) if not r["error"] else None
     f = {"url": url, "final_url": r["final_url"], "status": r["status"], "error": r["error"],
          "redirect_chain": r["chain"], "ttfb_ms": r["ttfb_ms"], "html_bytes_transferred": r["bytes"], "html_truncated": bool(r.get("truncated"))}
-    if r["error"] or r["status"] >= 400:
+    if bw:
+        f["bot_wall"] = bw
+    if r["error"] or r["status"] >= 400 or (bw and bw["confidence"] == "high"):
         out = json.dumps(f, ensure_ascii=False, indent=2)
         (_write(args.out, out) if args.out else print(out))
-        print(f"page unreachable: status={r['status']} error={r['error']}", file=sys.stderr)
+        if bw:
+            print(f"page not audited: {botwall.one_line(bw)}. {botwall.GUIDANCE}", file=sys.stderr)
+        else:
+            print(f"page unreachable: status={r['status']} error={r['error']}", file=sys.stderr)
         return 1
 
+    if bw:
+        print(f"warning: {botwall.one_line(bw)} (confidence {bw['confidence']}). Look at the screens before you trust this page.", file=sys.stderr)
     html = r["body"]
     h = r["headers"]
     p = PageParser(r["final_url"])

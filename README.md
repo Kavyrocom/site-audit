@@ -51,6 +51,7 @@ flowchart LR
 
 | Script | Job |
 |---|---|
+| `doctor.py` | one read-only check before the first audit: what this machine can run (Python, Chrome, Lighthouse, Unlighthouse, a Google key by variable name), what each missing piece costs and how to install it |
 | `facts.py` | head, headings, images, links, forms, headers, trackers, robots, sitemaps, redirects, soft 404 |
 | `lh_median.py` | Lighthouse in series, median, spread, culprits (idle machine only: a busy one lies) |
 | `psi.py` | Google's own fresh lab run plus real-visitor (CrUX) data, with its scope (this page or the whole site), its 28-day period, its age and its trend; needs a free API key |
@@ -61,6 +62,7 @@ flowchart LR
 | `access_check.py` | read-only proof that an ssh, WordPress, FTP or folder access works, and what it allows |
 | `redact.py` | masks secrets, e-mail addresses, IP addresses, phone numbers and street addresses in command output before it is kept as evidence |
 | `render.py` | real screens at several scroll positions, text and buttons after JavaScript, fixed banners and the share of the screen they cover |
+| `botwall.py` | used by `facts.py`, `crawl.py` and `render.py`: recognises a bot-protection page (challenge, block, verification) so it is never audited as if it were the site. It never tries to get past the protection |
 | `build_report.py` | refuses unproven findings, computes scores, ranks priorities, writes `report.md` and `action-plan.md` |
 | `fix_tracker.py` | the referee of the fix mode: priority order, one GO per action, nothing started with something missing, no secret stored |
 
@@ -227,6 +229,7 @@ Measurement scripts cost nothing and run in seconds (Lighthouse x3 is the slow p
 ## Limits, said plainly
 
 - Lighthouse numbers are **lab** measurements, made at the time of the audit. Real-visitor data (CrUX) is a 28-day aggregate: it is **not fresh**, it moves slowly after a fix, and it exists only if the page has enough traffic (otherwise only the whole site, and the report says so). `psi.py` needs a **free Google API key**; without one that data is "not measured". INP only exists in that real-visitor data.
+- A site whose protection (Cloudflare, Sucuri, Akamai and similar) stops the audit machine cannot be audited from outside: the scripts recognise the challenge or block page, say so and stop. They never try to get past it. Ask the owner to allow the audit machine's address, or audit a copy of the site.
 - The crawl sees the initial HTML. JavaScript-rendered sites are flagged, and `render.py` reads the rendered page for the audited URL only.
 - Conversion and copy findings are **judgements** (`deduced`), not measurements. They come with a quote or a screen and a test to confirm them.
 - Scores are indicative: a transparent penalty model (critical 40, high 20, medium 8, low 3, reduced to 70% when deduced and 40% when hypothesis), not a standard. Two passes on the same site can differ by a few points.
@@ -243,7 +246,7 @@ Measurement scripts cost nothing and run in seconds (Lighthouse x3 is the slow p
 python3 -I -m unittest discover -s tests
 ```
 
-289 offline tests: a local fixture site for the crawler and the facts script, the validator, the scoring and the action plan, the fix mode rules (order, GO, missing items, secrets), the consistency detector (planted contradictions, and things that only look like contradictions), a fake Google server for `psi.py` (freshness, page versus whole-site scope, stale data, missing key), a real Chrome for `devtools.py` (cookies, third parties, the refuse-button test) and for rendering (skipped when Chrome is missing), the access checks (a throwaway `sshd` when available), and the secret masking. A hostile-input suite covers redirects to `file://` and private addresses (by redirect, by script, by sitemap), a robots rule aimed at the crawler, a refuse button inside a form or tied to one, secrets in notes, and a hostile page that tries to reach an internal service from a real Chrome (cross-site iframe, service worker, WebSocket, prefetch) or a robots.txt rule built to stall the crawler. `python3 -I tests/mutation_check.py` breaks 86 rules one at a time on a copy of the repository, first checks that the untouched copy is green, and counts a mutant as caught only when a test fails on a check, not when the mutant merely crashes the code.
+320 offline tests: a local fixture site for the crawler and the facts script, the validator, the scoring and the action plan, the fix mode rules (order, GO, missing items, secrets), the consistency detector (planted contradictions, and things that only look like contradictions), a fake Google server for `psi.py` (freshness, page versus whole-site scope, stale data, missing key), a real Chrome for `devtools.py` (cookies, third parties, the refuse-button test) and for rendering (skipped when Chrome is missing), the access checks (a throwaway `sshd` when available), and the secret masking. A hostile-input suite covers redirects to `file://` and private addresses (by redirect, by script, by sitemap), a robots rule aimed at the crawler, a refuse button inside a form or tied to one, secrets in notes, and a hostile page that tries to reach an internal service from a real Chrome (cross-site iframe, service worker, WebSocket, prefetch) or a robots.txt rule built to stall the crawler. `python3 -I tests/mutation_check.py` breaks 96 rules one at a time on a copy of the repository, first checks that the untouched copy is green, and counts a mutant as caught only when a test fails on a check, not when the mutant merely crashes the code.
 
 ## Credits
 
