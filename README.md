@@ -102,11 +102,15 @@ If a Hermes session is already open, type `/reload-skills` so it sees the skill.
 npx skills add Kavyrocom/site-audit
 ```
 
-**Manual** (any agent that reads `SKILL.md`): copy `skills/site-audit/` into its skills folder.
+**Manual** (any agent that reads Agent Skills, a folder with a `SKILL.md`): copy `skills/site-audit/` into its skills folder.
 
 ```
-Claude Code   ~/.claude/skills/site-audit/        (or .claude/skills/ in a project)
+Claude Code   ~/.claude/skills/site-audit/            (or .claude/skills/ in a project)
+OpenCode      ~/.config/opencode/skills/site-audit/   (it also reads .claude/skills/ and .agents/skills/)
+Others        .agents/skills/site-audit/              (the shared convention)
 ```
+
+The skill follows the open [Agent Skills format](https://agentskills.io/specification) (checked with `skills-ref validate`): `SKILL.md` names no tool of any agent, and the scripts are plain Python that the agent starts from a shell. It was loaded and its preflight run from a clean project in Claude Code and in OpenCode, and installed in Hermes Agent.
 
 ## Use
 
