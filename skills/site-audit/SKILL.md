@@ -137,14 +137,14 @@ Reply with: the verdict, the overall score, the top 3 priorities (one line each)
 
 ## Phase 2. Apply the plan (only when the person asks)
 
-When the person says to apply or fix, or accepts your offer after delivery, load `references/fix-mode.md` and follow it. In one breath: `fix_tracker.py init`, ask for everything missing in a single message, then one action at a time in priority order, a GO for each, verify, tick. An action with a missing item is never started: the agent asks. Without any access to the site, every action becomes a hand-off with ready-to-use text and settings.
+When the person says to apply or fix, or accepts your offer after delivery, load `references/fix-mode.md` and follow it. In one breath: `fix_tracker.py init`, ask for everything missing in a single message, then one action at a time in priority order, a GO for each, verify, tick. An action with a missing item is never started: the agent asks. Without any access to the site, every action becomes a hand-off with ready-to-use text and settings. When the plan is done, offer to rerun the audit on the same pages and compare both findings.json with `audit_diff.py`: a finding the second audit no longer reports is a candidate fix, with the line that says how to confirm it, never a confirmed fix (`references/fix-mode.md`, step D).
 
 ## Exit codes (what each script returning something other than 0 means for you)
 
 | Script | Code | What to do |
 |---|---|---|
 | any | 2 | Wrong input at the command line (bad URL scheme, unknown option, missing argument). Read the message, fix the input, do not retry blindly. |
-| `build_report.py`, `fix_tracker.py`, `redact.py` | 2 | A rule refused the file or the action (or `redact.py` could not write its output). The message says which one. Fix the cause. Never edit the script or the state file to get past it. |
+| `build_report.py`, `audit_diff.py`, `fix_tracker.py`, `redact.py` | 2 | A rule refused the file or the action (or `redact.py` could not write its output). The message says which one. Fix the cause. Never edit the script or the state file to get past it. |
 | `psi.py` | 3 | No Google data at all (no key and no lab answer). Write "Google data not measured", ask for the free key. |
 | `psi.py` | 4 | Partial (some calls failed), failed or quota exceeded. `psi.json` says which part is missing: never fill the gap with a guess. |
 | `lh_site.py` | 2 | Unlighthouse failed or timed out, or a page led to a refused address. |

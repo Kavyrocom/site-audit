@@ -53,7 +53,13 @@ python3 -I <S>/fix_tracker.py next --state <W>/fix-state.json
 
 **D. Finish**
 
-`next` says "All actions are done" (or nothing is left for you to start). Give a table: done, failed, deferred, waiting on the person, each with its proof or reason. Then offer to rerun the audit on the same pages with the same scope and compare with `score_before` stored in `fix-state.json`. The rerun is what proves the fixes worked.
+`next` says "All actions are done" (or nothing is left for you to start). Give a table: done, failed, deferred, waiting on the person, each with its proof or reason. Then offer to rerun the audit on the same pages with the same scope, in a NEW work folder, and compare:
+
+```
+python3 -I <S>/audit_diff.py <W>/findings.json <new work folder>/findings.json --out <new work folder>/audit-diff.md
+```
+
+The rerun is what proves the fixes worked. Read the diff honestly: a finding the second audit no longer reports is a candidate fix, not a confirmed one (it may have been reworded, or its page not measured this time). Check it against the "how to verify" line the diff recalls before telling the person it is fixed, and also say what is new and what got worse. The diff refuses to compare two different sites, and a finding whose domain was not audited this time is listed separately, not as a fix.
 
 ## What to put in the GO message
 

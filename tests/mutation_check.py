@@ -118,6 +118,15 @@ MUTANTS = {
     "M130": ("doctor fails when an optional piece is missing", SC + "doctor.py", "return 0 if python_ok else 1", 'return 0 if all(i["status"] == "ok" for i in items) else 1', ["test_doctor.py"]),
     "M131": ("a protection page is reported as a plain unreachable page, without its name", SC + "facts.py", "        if bw:\n            print(f\"page not audited:", "        if False:\n            print(f\"page not audited:", ["test_botwall.py"]),
     "M132": ("a refusal from a protection server with no site content is not recognised", SC + "botwall.py", "if status in REFUSING and server_vendor and thin:", "if False:", ["test_botwall.py"]),
+    "M143": ("a finding whose domain the second audit dropped is called a fix candidate", SC + "audit_diff.py", 'not_audited = [f for f in gone if f["domain"] not in audited_b]     # computed before gone is filtered', 'not_audited = []', ["test_audit_diff.py"]),
+    "M144": ("findings are matched by their id across audits", SC + "audit_diff.py", 'def fkey(f):\n    return (f.get("domain"), tuple(sorted(f.get("pages") or [])), norm_title(f.get("title")))', 'def fkey(f):\n    return (f.get("id"),)', ["test_audit_diff.py"]),
+    "M145": ("a worse severity is named down", SC + "audit_diff.py", 'else "up"))}', 'else "down"))}', ["test_audit_diff.py"]),
+    "M146": ("two audits of two different sites are compared", SC + "audit_diff.py", 'if host_of(fa["meta"]["url"]) != host_of(fb["meta"]["url"]):', "if False:", ["test_audit_diff.py"]),
+    "M147": ("the newer audit may be given first", SC + "audit_diff.py", 'if str(fb["meta"].get("date", "")) < str(fa["meta"].get("date", "")):', "if False:", ["test_audit_diff.py"]),
+    "M148": ("the second audit that covered fewer pages says nothing", SC + "audit_diff.py", 'if fa["meta"].get("scope") == "site" and fb["meta"].get("scope") == "site" and (fb["meta"].get("pages_audited") or 0) < (fa["meta"].get("pages_audited") or 0):', "if False:", ["test_audit_diff.py"]),
+    "M149": ("the candidate-fix caveat is dropped", SC + "audit_diff.py", "Each is a candidate fix, not a confirmed one:", "Each of these is fixed:", ["test_audit_diff.py"]),
+    "M150": ("a finding of a dropped domain is also listed as no longer reported", SC + "audit_diff.py", 'gone = [f for f in gone if f["domain"] in audited_b]', "gone = gone", ["test_audit_diff.py"]),
+    "M151": ("a second audit that covers other domains says nothing about the overall score", SC + "audit_diff.py", "if doms_a != doms_b:", "if False:", ["test_audit_diff.py"]),
     "M50": ("a non-http address is accepted", SC + "safenet.py", [('if m and m.group(1).lower() not in ("http", "https"):', "if False:"), ("    if other:", "    if False:")], "", ["test_report_scoring_and_order.py"]),
 }
 
