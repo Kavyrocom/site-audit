@@ -13,8 +13,10 @@ Be honest about the state of the field: there is no proven ranking recipe for AI
 5. **Citability.** Original data, named sources, numbers with dates, quotes attributed. Vague content is not cited.
 6. **`llms.txt`.** `site_level./llms.txt.status`. It is an emerging convention with unproven effect: absence is `low` at most, say so.
 7. **Freshness.** Visible publication or update dates on content that ages.
+8. **Sub-questions.** A question is often answered from several narrower questions around it. A page or a section that answers each of them gives more chances to be found and quoted. Check that the main sub-questions of the subject are answered, in the page or in a section.
 
 ## Traps
 
+- Read this domain after `seo`. Google states that AI Overviews are built to show only information backed by top web results, so a page generally has to appear in the classic results first. Do not turn an example into a rate.
 - Do not promise citations or traffic from AI. Say what makes content easier to read and quote.
 - Do not recommend hiding content or special markup "for AI" that users cannot see.

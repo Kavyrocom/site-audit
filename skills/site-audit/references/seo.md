@@ -1,6 +1,6 @@
 # SEO on-page (`seo`)
 
-Sources: `facts.json` (head, headings, links, images, structured data), `crawl/pages.jsonl` and `crawl/summary.json`.
+Sources: `facts.json` (head, headings, links, images, structured data), `crawl/pages.jsonl` and `crawl/summary.json`. For authors, dates and cited sources (items 12 to 15), read the visible text in `rendered.json`: `facts.json` does not extract them.
 
 ## Check
 
@@ -15,9 +15,14 @@ Sources: `facts.json` (head, headings, links, images, structured data), `crawl/p
 9. **Social sharing tags.** `og:title`, `og:description`, `og:image` (`open_graph`, `twitter`): they control how links look when shared.
 10. **International.** `hreflang` pairs reciprocal and consistent with `html_lang` when the site has several languages.
 11. **Keyword and cannibalisation.** Several pages with the same title or `h1` target the same query: pick one, merge or differentiate.
+12. **Page type, and what it has to prove.** Google does not judge every page the same way, so name the type before judging. A shop or brand page must look like a credible seller: clear offer, prices, delivery and return terms, reviews. A practitioner or expert page must show real expertise: a named author, credentials, first-hand cases. A testimonial or a discussion page is valued for first-hand experience. A specialist site must show depth across its subject (item 13). Judge each page by what its type has to prove, not against a blog post. (`deduced`.)
+13. **Topic coverage.** Google measures topical authority subject by subject, so a site earns it by covering its subject in depth, not with one strong page. In the crawl, look for a main page on a subject with no supporting pages, or many pages on one subject with no page that ties them together and links to them. (`deduced`. No tool measures authority: give no score.)
+14. **Proof of expertise on sensitive topics.** For health, money, safety or public matters (Google calls them YMYL), check what a visitor can see: a named author with relevant credentials, sources cited for the claims, a review or update date, who runs the site (about, contact, legal notice). Missing on such a page is `medium` at most and `deduced`. On a recipe or a hobby blog it is not a finding.
+15. **Freshness depends on the query.** Update first the pages aimed at news or fast-changing subjects. Elsewhere an old page can rank well: age alone is not a finding. A visible date is expected only on content that ages (news, prices, rules, statistics).
 
 ## Traps
 
 - Do not state keyword rankings or search volumes without a data source. Without Search Console or a rank tool, say "not measured".
 - `meta keywords` is ignored by Google: not a finding.
 - A page can be technically perfect and still not rank because the topic is not wanted: say what you cannot know.
+- Google's ranking systems cannot be observed from outside. Describe what the page shows and what its type needs. Never name a Google system as the cause of a ranking, and never give a weight to a signal: public lists of signals say what exists, not what counts most.
