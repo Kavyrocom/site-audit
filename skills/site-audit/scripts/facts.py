@@ -370,6 +370,120 @@ def jsonld_types(raws):
     return sorted(types), invalid
 
 
+def _bare(t):
+    """'https://schema.org/Product' and 'Product' are the same type."""
+    return str(t).rsplit("/", 1)[-1].rsplit(":", 1)[-1]
+
+
+def _types_of(node):
+    t = node.get("@type")
+    return {_bare(x) for x in (t if isinstance(t, list) else [t])} if t else set()
+
+
+def _empty(v):
+    return v is None or v == "" or v == [] or v == {}
+
+
+# Only what Google's documentation lists as REQUIRED for the type, nothing recommended.
+# Each entry is a list of alternatives: the property is present if any one of them is.
+REQUIRED = {
+    "Product": [["name"], ["review", "aggregateRating", "offers"]],
+    "VideoObject": [["name"], ["thumbnailUrl"], ["uploadDate"]],
+    "Event": [["name"], ["startDate"], ["location"]],
+}
+# Common subtypes only: a type we do not list is not checked, never guessed at.
+LOCAL_BUSINESS = {"LocalBusiness", "Restaurant", "Store", "Hotel", "Dentist", "CafeOrCoffeeShop", "BarOrPub",
+                  "AutoRepair", "HairSalon", "BeautySalon", "RealEstateAgent", "LegalService", "Physician"}
+
+
+def _missing(node, groups):
+    return [" or ".join(g) for g in groups if all(_empty(node.get(p)) for p in g)]
+
+
+def jsonld_problems(raws):
+    """Required properties missing from the JSON-LD blocks, for the types Google documents.
+
+    Returns [{"type", "missing"}]. A block that does not parse is counted by jsonld_types, not here.
+    Nothing recommended is reported, and a type or a nesting we do not check is left alone: a wrong
+    "missing" would send someone to fix markup that was fine.
+    """
+    problems = []
+
+    def add(kind, missing):
+        if missing:
+            problems.append({"type": kind, "missing": missing})
+
+    def offer_price(o):
+        spec = o.get("priceSpecification")
+        specs = spec if isinstance(spec, list) else [spec]
+        return not _empty(o.get("price")) or any(isinstance(x, dict) and not _empty(x.get("price")) for x in specs)
+
+    def check(node):
+        kinds = _types_of(node)
+        if "Product" in kinds:
+            add("Product", _missing(node, REQUIRED["Product"]))
+            offers = node.get("offers")
+            for o in (offers if isinstance(offers, list) else [offers]):
+                if isinstance(o, dict) and "Offer" in _types_of(o) and not offer_price(o):
+                    add("Offer", ["price or priceSpecification.price"])
+        if "VideoObject" in kinds:
+            add("VideoObject", _missing(node, REQUIRED["VideoObject"]))
+        if "Event" in kinds:
+            add("Event", _missing(node, REQUIRED["Event"]))
+        if kinds & LOCAL_BUSINESS:
+            add(sorted(kinds & LOCAL_BUSINESS)[0], _missing(node, [["name"], ["address"]]))
+        if "BreadcrumbList" in kinds:
+            items = node.get("itemListElement")
+            items = items if isinstance(items, list) else ([items] if items else [])
+            if len(items) < 2:
+                add("BreadcrumbList", ["itemListElement with at least 2 items"])
+            for i, it in enumerate(items):
+                if not isinstance(it, dict):
+                    continue
+                last = i == len(items) - 1
+                miss = []
+                if _empty(it.get("position")):
+                    miss.append("position")
+                if _empty(it.get("item")) and not last:
+                    miss.append("item")
+                if _empty(it.get("name")) and not isinstance(it.get("item"), dict):
+                    miss.append("name")
+                add("BreadcrumbList item %d" % (i + 1), miss)
+
+    def entities(data):
+        """The things a block describes: its root nodes and the members of its @graph.
+
+        Deeper nodes are references more often than descriptions (a variant that is only a url, the product a
+        rating is about, written as its name), and Google asks the required properties of the entity itself.
+        A breadcrumb written inside its page is the one nesting that is a real description.
+        """
+        roots = data if isinstance(data, list) else [data]
+        for r in roots:
+            if not isinstance(r, dict):
+                continue
+            yield r
+            graph = r.get("@graph")
+            for g in (graph if isinstance(graph, list) else []):
+                if isinstance(g, dict):
+                    yield g
+
+    for raw in raws:
+        try:
+            data = json.loads(raw)
+        except Exception:
+            continue
+        for r in (data if isinstance(data, list) else [data]):
+            if isinstance(r, dict) and r.get("@type") and "@context" not in r and "@graph" not in r:
+                add(", ".join(sorted(_types_of(r))), ["@context"])
+        for node in entities(data):
+            check(node)
+            crumbs = node.get("breadcrumb")
+            for c in (crumbs if isinstance(crumbs, list) else [crumbs]):
+                if isinstance(c, dict):
+                    check(c)
+    return problems
+
+
 NON_CODE_SCRIPT = re.compile(r"type\s*=\s*[\"']?(?:application/(?:ld\+)?json|text/template|text/html|importmap|speculationrules)", re.I)
 
 
@@ -563,7 +677,8 @@ def main():
                   "generic_anchor_text": generic, "nofollow": nofollow, "top_external_hosts": dict(sorted(ext_hosts.items(), key=lambda x: -x[1])[:8])},
         "forms": p.forms, "buttons_count": len(p.buttons), "cta_candidates": cta_unique[:15],
         "tel_mailto_links": p.tel_mailto, "iframes": p.iframes, "videos": p.videos,
-        "structured_data": {"jsonld_types": types, "jsonld_blocks": len(p.jsonld_raw), "invalid_jsonld_blocks": invalid_ld},
+        "structured_data": {"jsonld_types": types, "jsonld_blocks": len(p.jsonld_raw), "invalid_jsonld_blocks": invalid_ld,
+                            "jsonld_missing_required": jsonld_problems(p.jsonld_raw)},
         "assets": {"external_scripts": len(p.scripts), "stylesheets": p.stylesheets,
                    "inline_script_kb": round(p.inline_script_bytes / 1024, 1),
                    "third_party_script_hosts": dict(sorted(script_hosts.items(), key=lambda x: -x[1])[:12])},

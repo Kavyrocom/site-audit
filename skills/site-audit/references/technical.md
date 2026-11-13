@@ -11,7 +11,7 @@ Sources: `facts.json` (`status`, `redirect_chain`, `site_level`, `headers`, `mix
 5. **robots.txt.** Present, not blocking the whole site (`robots_disallow_all`), declares the sitemap, does not block CSS/JS needed to render. `Disallow` on a page you want ranked = critical.
 6. **Sitemap.** Present, valid XML, same host, no duplicate URLs, contains only indexable 200 pages. Pages crawled but absent from the sitemap, and sitemap URLs that redirect, 404 or are `noindex`, are findings. Orphan detection (`in_sitemap_but_not_linked_from_crawl`) is only reliable when `orphan_check_reliable` is true.
 7. **Indexability signals must agree.** `noindex` (meta or `x-robots-tag`), canonical pointing elsewhere (`canonical_points_elsewhere`), missing canonical on a page you want indexed. A `noindex` on a page that should rank is critical; on legal or account pages it is normal.
-8. **HTML hygiene.** `doctype`, `charset`, `html_lang` present, valid JSON-LD (`invalid_jsonld_blocks` = 0), no mixed content (`mixed_content_http_resources` = 0), trailing-slash consistency.
+8. **HTML hygiene.** `doctype`, `charset`, `html_lang` present, valid JSON-LD (`invalid_jsonld_blocks` = 0, and `jsonld_missing_required` empty: see `seo.md` item 8), no mixed content (`mixed_content_http_resources` = 0), trailing-slash consistency.
 9. **Rendering.** If the start page has almost no text but many scripts, the site is rendered by JavaScript: say the audit sees only initial HTML, and recommend server-side rendering or prerendering for content that must be indexed.
 10. **Hosting signals.** TTFB (`ttfb_ms`): under 800 ms is acceptable, over 1.8 s is a clear problem. Compression (`content-encoding`), caching (`cache-control`, CDN headers).
 

@@ -29,7 +29,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import botwall  # noqa: E402
 import robotsrules  # noqa: E402
 import safenet  # noqa: E402
-from facts import DEFAULT_UA, PageParser, fetch, jsonld_types  # noqa: E402
+from facts import DEFAULT_UA, PageParser, fetch, jsonld_problems, jsonld_types  # noqa: E402
 
 SKIP_EXT = re.compile(r"\.(pdf|jpe?g|png|gif|webp|avif|svg|ico|css|js|mjs|json|xml|zip|gz|mp4|mp3|mov|webm|woff2?|ttf|eot|docx?|xlsx?|pptx?|rss|atom)(\?|$)", re.I)
 TRACKING = re.compile(r"^(utm_|fbclid|gclid|msclkid|mc_|_ga|ref$|ref_)", re.I)
@@ -147,7 +147,7 @@ def analyse(url, ua, depth, hop_check=None):
             "words": len(re.findall(r"\w+", " ".join(p.text))),
             "images": len(p.images), "images_missing_alt": sum(1 for i in p.images if "alt" not in i),
             "has_viewport": bool(p.meta.get("viewport")), "has_og_title": "og:title" in p.meta, "has_og_image": "og:image" in p.meta,
-            "jsonld_types": types, "forms": len(p.forms),
+            "jsonld_types": types, "jsonld_missing_required": jsonld_problems(p.jsonld_raw), "forms": len(p.forms),
             "scripts": len(p.scripts), "generic_anchor_links": sum(1 for a in p.links if (a["text"] or "").strip().lower() in ("click here", "here", "read more", "learn more", "en savoir plus", "cliquez ici", "lire la suite")),
         })
         for a in p.links:
@@ -346,6 +346,7 @@ def main():
     issues["images_missing_alt"] = {"total": sum(r.get("images_missing_alt", 0) for r in ok), "pages": cap([{"url": r["url"], "n": r["images_missing_alt"]} for r in ok if r.get("images_missing_alt")], 10)}
     issues["missing_lang"] = cap([r["url"] for r in ok if not r.get("lang")])
     issues["missing_viewport"] = cap([r["url"] for r in ok if not r.get("has_viewport")])
+    issues["jsonld_missing_required_properties"] = cap([{"url": r["url"], "problems": r["jsonld_missing_required"][:5]} for r in ok if r.get("jsonld_missing_required")])
     issues["missing_og_image"] = cap([r["url"] for r in ok if not r.get("has_og_image")])
     issues["slow_ttfb_over_800ms"] = cap([{"url": r["url"], "ttfb_ms": r["ttfb_ms"]} for r in recs if (r["ttfb_ms"] or 0) > 800])
     t = defaultdict(list)
